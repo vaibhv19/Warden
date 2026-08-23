@@ -67,12 +67,18 @@ warden/
 │       ├── scanners/
 │       │   ├── __init__.py
 │       │   ├── base.py          # Abstract Base Scanner interface
-│       │   └── zap_client.py    # Custom OWASP ZAP API Client
+│       │   ├── zap_client.py    # Custom OWASP ZAP API Client
+│       │   ├── sqli.py          # Custom SQL Injection Scanner
+│       │   ├── xss.py           # Custom Cross-Site Scripting Scanner
+│       │   ├── auth.py          # Custom Authentication Scanner
+│       │   ├── access_control.py # Custom Broken Access Control Scanner
+│       │   └── fuzzing.py       # Custom Parameter Fuzzing Scanner
 │       ├── orchestration/
 │       │   └── __init__.py      # Scan Orchestrator lifecycle manager
 │       └── reporting/
-│           └── __init__.py      # Findings Normalizer (ZAP -> Warden)
-├── tests/                       # Unit & Integration Tests
+│           ├── __init__.py      # Findings Normalizer (ZAP -> Warden)
+│           └── engine.py        # Unified report engine and exporters
+├── tests/                       # Unit, Integration, & E2E Tests
 ├── Dockerfile                   # Warden container config
 ├── docker-compose.yml           # Multi-container orchestration (Warden + ZAP)
 ├── pyproject.toml               # Python package metadata and tool configs
