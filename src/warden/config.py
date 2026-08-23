@@ -21,6 +21,8 @@ class Settings(BaseModel):
     zap_api_key: Optional[str] = Field(default=None, alias="ZAP_API_KEY")
     timeout_seconds: int = Field(default=30, alias="TIMEOUT_SECONDS")
     output_dir: Path = Field(default=Path("./reports"), alias="OUTPUT_DIR")
+    scan_timeout_seconds: int = Field(default=300, alias="SCAN_TIMEOUT_SECONDS")
+    poll_interval_seconds: int = Field(default=2, alias="POLL_INTERVAL_SECONDS")
 
     @field_validator("warden_env")
     @classmethod
@@ -30,11 +32,11 @@ class Settings(BaseModel):
             raise ValueError("WARDEN_ENV must be one of: dev, test, prod")
         return v
 
-    @field_validator("timeout_seconds")
+    @field_validator("timeout_seconds", "scan_timeout_seconds", "poll_interval_seconds")
     @classmethod
-    def validate_timeout(cls, v: int) -> int:
+    def validate_positive_ints(cls, v: int) -> int:
         if v <= 0:
-            raise ValueError("TIMEOUT_SECONDS must be a positive integer")
+            raise ValueError("Configuration values must be a positive integer")
         return v
 
 
