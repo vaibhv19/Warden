@@ -169,7 +169,7 @@ class ScanOrchestrator:
             )
 
         try:
-            ac_scanner = AccessControlScanner(self.target, self.zap)
+            ac_scanner = AccessControlScanner(self.target)
             self._log("Running Broken Access Control Scanner...")
             ac_findings = ac_scanner.run()
             self._log(
@@ -182,7 +182,7 @@ class ScanOrchestrator:
             )
 
         try:
-            fuzz_scanner = FuzzingScanner(self.target, self.zap)
+            fuzz_scanner = FuzzingScanner(self.target)
             self._log("Running Input Fuzzing Scanner...")
             fuzz_findings = fuzz_scanner.run()
             self._log(

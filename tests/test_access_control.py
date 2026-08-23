@@ -232,6 +232,22 @@ def test_access_control_write_secure_no_finding():
 
 
 def test_access_control_integration():
+    # Reset target app DOCUMENTS to prevent contamination from other tests
+    import tests.target_app
+
+    tests.target_app.DOCUMENTS = {
+        "doc-a": {
+            "owner": "user-a",
+            "title": "Secret Document A",
+            "content": "This is User A's private info.",
+        },
+        "doc-b": {
+            "owner": "user-b",
+            "title": "Secret Document B",
+            "content": "This is User B's private info.",
+        },
+    }
+
     # Find a free port
     s = socket.socket()
     s.bind(("", 0))
