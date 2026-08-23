@@ -10,10 +10,12 @@ Warden is a controlled-environment security testing suite designed to automate v
 
 ## Current Project Status
 - **Phase 1: Project Foundation & Architecture (COMPLETE)**
-  - Repository foundation, package layout, and dependency configurations are established.
-  - Safe configuration and target authorization models are validated.
-  - Test suites are configured and executing correctly.
-  - Containerization foundation via Docker and Docker Compose is established.
+- **Phase 2: Target & Scan Infrastructure (COMPLETE)**
+  - Implemented syntactic URL checks, network pings, and target reachability check logic.
+  - Implemented custom REST integration wrapper for ZAP API connectivity.
+  - Developed full ScanOrchestrator to initiate scans, track status, and monitor progress.
+  - Developed conversion interface mapping raw ZAP alerts into Warden Finding models.
+  - Integrated scan command execution into the Warden CLI.
 
 ---
 
@@ -21,7 +23,7 @@ Warden is a controlled-environment security testing suite designed to automate v
 - **Core:** Python 3.12+ (Pydantic, Click, python-dotenv)
 - **Quality & Style:** Ruff, Pytest
 - **Infrastructure:** Docker, Docker Compose
-- **Target Integration (Future):** OWASP ZAP Daemon
+- **Target Integration:** OWASP ZAP Daemon
 
 ---
 
@@ -31,17 +33,21 @@ warden/
 ├── src/
 │   └── warden/
 │       ├── __init__.py          # Package initializer
-│       ├── main.py              # CLI Entry point
+│       ├── main.py              # CLI Entry point & scan commands
 │       ├── config.py            # Settings manager
+│       ├── target_validator.py  # Target reachability & health checks
 │       ├── models/
 │       │   ├── __init__.py
 │       │   ├── target.py        # Target model & safety validation
-│       │   └── finding.py       # Finding domain model placeholder
+│       │   └── finding.py       # Finding domain model
 │       ├── scanners/
 │       │   ├── __init__.py
-│       │   └── base.py          # Abstract Base Scanner interface
-│       ├── orchestration/       # Scan orchestration placeholder
-│       └── reporting/           # Report generation placeholder
+│       │   ├── base.py          # Abstract Base Scanner interface
+│       │   └── zap_client.py    # Custom OWASP ZAP API Client
+│       ├── orchestration/
+│       │   └── __init__.py      # Scan Orchestrator lifecycle manager
+│       └── reporting/
+│           └── __init__.py      # Findings Normalizer (ZAP -> Warden)
 ├── tests/                       # Unit & Integration Tests
 ├── Dockerfile                   # Warden container config
 ├── docker-compose.yml           # Multi-container orchestration (Warden + ZAP)
@@ -70,6 +76,8 @@ warden/
    - `WARDEN_ENV`: Run mode (`dev`, `test`, `prod`).
    - `ZAP_BASE_URL`: Base address of the ZAP API.
    - `TIMEOUT_SECONDS`: Global network request timeout.
+   - `SCAN_TIMEOUT_SECONDS`: Max time to wait for a spider scan (default: 300).
+   - `POLL_INTERVAL_SECONDS`: Interval for polling scan status (default: 2).
    - `OUTPUT_DIR`: Path to write report output.
 
 3. **Install Dependencies**
@@ -105,6 +113,12 @@ warden validate-target --id "t1" --name "Local Phoenix Test" --url "http://local
 
 # Validating an unauthorized target (Fails)
 warden validate-target --id "t2" --name "External Site" --url "http://example.com"
+```
+
+Execute a baseline scan against an authorized target (requires ZAP running):
+```bash
+# Running baseline scan and saving results
+warden scan --id "t-e2e" --name "Local Target" --url "http://localhost:8080/" --authorized
 ```
 
 ### Running Tests
@@ -146,5 +160,6 @@ This launches the Warden service and an OWASP ZAP stable container running in da
 ---
 
 ## Current Limitations
-- **Scanning:** Active vulnerability scanning, SQL injection, XSS, and fuzzing actions are not implemented in Phase 1.
-- **Reporting:** Structured security reports and export formats are placeholders.
+- **Security Testing Modules:** Custom active attack injection scripts (SQLi, XSS, auth bypass) are scheduled for later phases.
+- **Reporting Exporters:** Saving raw alerts into custom formats (markdown reports, PDF reports) is a placeholder.
+
