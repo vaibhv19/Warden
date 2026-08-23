@@ -17,7 +17,7 @@ services:
     ports:
       - "8080:8080"
     # Runs ZAP in daemon mode listening on all network interfaces with API key checking disabled for local development
-    command: zap.sh -daemon -host 0.0.0.0 -port 8080 -config api.disablekey=true
+    command: zap.sh -daemon -host 0.0.0.0 -port 8080 -config api.disablekey=true -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true
     networks:
       - warden-net
 
