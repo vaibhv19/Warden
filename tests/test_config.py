@@ -20,7 +20,7 @@ def test_env_validation() -> None:
 
     with pytest.raises(ValidationError) as excinfo:
         Settings(TIMEOUT_SECONDS=-5)
-    assert "TIMEOUT_SECONDS must be a positive integer" in str(excinfo.value)
+    assert "Configuration values must be a positive integer" in str(excinfo.value)
 
 
 def test_get_settings_mapping(monkeypatch: pytest.MonkeyPatch) -> None:
