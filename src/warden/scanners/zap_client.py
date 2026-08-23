@@ -123,3 +123,10 @@ class ZapClient:
         if "alerts" not in res:
             raise ZapClientError(f"Unexpected response retrieving alerts: {res}")
         return res["alerts"]
+
+    def get_crawled_urls(self) -> List[str]:
+        """Retrieves list of URLs crawled by the ZAP spider."""
+        res = self._request("core/view/urls/")
+        if "urls" not in res:
+            raise ZapClientError(f"Unexpected response retrieving crawled URLs: {res}")
+        return res["urls"]

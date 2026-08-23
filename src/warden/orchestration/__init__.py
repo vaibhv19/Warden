@@ -5,6 +5,9 @@ from warden.config import Settings
 from warden.models.finding import Finding
 from warden.models.target import TargetConfig
 from warden.reporting import normalize_zap_alert
+from warden.scanners.auth import AuthScanner
+from warden.scanners.sqli import SqlInjectionScanner
+from warden.scanners.xss import XssScanner
 from warden.scanners.zap_client import ZapClient
 from warden.target_validator import check_target_reachability, validate_target_config
 
@@ -122,4 +125,53 @@ class ScanOrchestrator:
             normalized_findings.append(finding)
 
         self._log(f"Successfully normalized {len(normalized_findings)} findings.")
-        return normalized_findings
+
+        # 8. Run Phase 3 Specialized Scanners
+        self._log("Running specialized vulnerability testing...")
+
+        try:
+            sqli_scanner = SqlInjectionScanner(self.target, self.zap)
+            self._log("Running SQL Injection Scanner...")
+            sqli_findings = sqli_scanner.run()
+            self._log(
+                f"SQL Injection Scanner discovered {len(sqli_findings)} findings."
+            )
+            normalized_findings.extend(sqli_findings)
+        except Exception as e:
+            self._log(f"Warning: SQL Injection Scanner encountered an issue: {e}")
+
+        try:
+            xss_scanner = XssScanner(self.target, self.zap)
+            self._log("Running Cross-Site Scripting Scanner...")
+            xss_findings = xss_scanner.run()
+            self._log(
+                f"Cross-Site Scripting Scanner discovered {len(xss_findings)} findings."
+            )
+            normalized_findings.extend(xss_findings)
+        except Exception as e:
+            self._log(
+                f"Warning: Cross-Site Scripting Scanner encountered an issue: {e}"
+            )
+
+        try:
+            auth_scanner = AuthScanner(self.target, self.zap)
+            self._log("Running Authentication Weakness Scanner...")
+            auth_findings = auth_scanner.run()
+            self._log(
+                f"Authentication Weakness Scanner discovered {len(auth_findings)} findings."
+            )
+            normalized_findings.extend(auth_findings)
+        except Exception as e:
+            self._log(
+                f"Warning: Authentication Weakness Scanner encountered an issue: {e}"
+            )
+
+        # Deduplicate findings by ID
+        unique_findings = {}
+        for f in normalized_findings:
+            unique_findings[f.id] = f
+
+        self._log(
+            f"Successfully completed scan orchestration. Total findings: {len(unique_findings)}."
+        )
+        return list(unique_findings.values())

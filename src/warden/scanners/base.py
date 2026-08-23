@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Any, List, Optional
 
 from warden.models.finding import Finding
 from warden.models.target import TargetConfig
@@ -8,12 +8,13 @@ from warden.models.target import TargetConfig
 class BaseScanner(ABC):
     """Abstract Base Class for all security scanning modules in Warden."""
 
-    def __init__(self, target: TargetConfig) -> None:
+    def __init__(self, target: TargetConfig, zap_client: Optional[Any] = None) -> None:
         if not target.is_authorized:
             raise ValueError(
                 f"Target '{target.name}' must be authorized for security scanning."
             )
         self.target = target
+        self.zap_client = zap_client
 
     @property
     @abstractmethod
