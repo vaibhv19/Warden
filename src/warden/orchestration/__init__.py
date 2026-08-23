@@ -5,6 +5,7 @@ from warden.config import Settings
 from warden.models.finding import Finding
 from warden.models.target import TargetConfig
 from warden.reporting import normalize_zap_alert
+from warden.scanners.access_control import AccessControlScanner
 from warden.scanners.auth import AuthScanner
 from warden.scanners.sqli import SqlInjectionScanner
 from warden.scanners.xss import XssScanner
@@ -164,6 +165,19 @@ class ScanOrchestrator:
         except Exception as e:
             self._log(
                 f"Warning: Authentication Weakness Scanner encountered an issue: {e}"
+            )
+
+        try:
+            ac_scanner = AccessControlScanner(self.target, self.zap)
+            self._log("Running Broken Access Control Scanner...")
+            ac_findings = ac_scanner.run()
+            self._log(
+                f"Broken Access Control Scanner discovered {len(ac_findings)} findings."
+            )
+            normalized_findings.extend(ac_findings)
+        except Exception as e:
+            self._log(
+                f"Warning: Broken Access Control Scanner encountered an issue: {e}"
             )
 
         # Deduplicate findings by ID

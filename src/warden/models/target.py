@@ -31,6 +31,7 @@ class TargetConfig(BaseModel):
         description=AUTHORIZATION_DESC,
     )
     auth_context: Optional[TargetAuthContext] = Field(default=None)
+    auth_context_b: Optional[TargetAuthContext] = Field(default=None)
     scan_metadata: Dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("is_authorized")

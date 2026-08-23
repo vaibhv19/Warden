@@ -1,9 +1,23 @@
 import http.server
+import json
 import socketserver
 import time
 import urllib.parse
 
 PORT = 8000
+
+DOCUMENTS = {
+    "doc-a": {
+        "owner": "user-a",
+        "title": "Secret Document A",
+        "content": "This is User A's private info.",
+    },
+    "doc-b": {
+        "owner": "user-b",
+        "title": "Secret Document B",
+        "content": "This is User B's private info.",
+    },
+}
 
 
 class VulnerableHandler(http.server.BaseHTTPRequestHandler):
@@ -106,10 +120,110 @@ class VulnerableHandler(http.server.BaseHTTPRequestHandler):
                 self.wfile.write(b"401 Unauthorized: missing or invalid token")
                 return
 
+        # 5.1 IDOR / Access Control Secure document endpoint
+        elif path.startswith("/api/documents/secure/"):
+            doc_id = path.split("/")[-1]
+            auth_header = self.headers.get("Authorization", "")
+
+            user = None
+            if auth_header == "Bearer user-a-token":
+                user = "user-a"
+            elif auth_header == "Bearer user-b-token":
+                user = "user-b"
+
+            if not user:
+                self.send_response(401)
+                self.end_headers()
+                self.wfile.write(b"401 Unauthorized")
+                return
+
+            doc = DOCUMENTS.get(doc_id)
+            if not doc:
+                self.send_response(404)
+                self.end_headers()
+                self.wfile.write(b"404 Not Found")
+                return
+
+            if doc["owner"] != user:
+                self.send_response(403)
+                self.end_headers()
+                self.wfile.write(b"403 Forbidden")
+                return
+
+            if self.command == "GET":
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(doc).encode("utf-8"))
+            elif self.command in ["PUT", "POST"]:
+                content_length = int(self.headers.get("Content-Length", 0))
+                body = self.rfile.read(content_length).decode("utf-8")
+                try:
+                    payload = json.loads(body)
+                    doc["title"] = payload.get("title", doc["title"])
+                    doc["content"] = payload.get("content", doc["content"])
+                except Exception:
+                    pass
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(doc).encode("utf-8"))
+            return
+
+        # 5.2 IDOR / Access Control Vulnerable document endpoint
+        elif path.startswith("/api/documents/vulnerable/"):
+            doc_id = path.split("/")[-1]
+            auth_header = self.headers.get("Authorization", "")
+
+            user = None
+            if auth_header == "Bearer user-a-token":
+                user = "user-a"
+            elif auth_header == "Bearer user-b-token":
+                user = "user-b"
+
+            if not user:
+                self.send_response(401)
+                self.end_headers()
+                self.wfile.write(b"401 Unauthorized")
+                return
+
+            doc = DOCUMENTS.get(doc_id)
+            if not doc:
+                self.send_response(404)
+                self.end_headers()
+                self.wfile.write(b"404 Not Found")
+                return
+
+            if self.command == "GET":
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(doc).encode("utf-8"))
+            elif self.command in ["PUT", "POST"]:
+                content_length = int(self.headers.get("Content-Length", 0))
+                body = self.rfile.read(content_length).decode("utf-8")
+                try:
+                    payload = json.loads(body)
+                    doc["title"] = payload.get("title", doc["title"])
+                    doc["content"] = payload.get("content", doc["content"])
+                except Exception:
+                    pass
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(doc).encode("utf-8"))
+            return
+
         # 6. Fallback 404
         self.send_response(404)
         self.end_headers()
         self.wfile.write(b"404 Not Found")
+
+    def do_POST(self):
+        self.do_GET()
+
+    def do_PUT(self):
+        self.do_GET()
 
 
 def run_server():

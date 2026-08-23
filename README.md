@@ -16,6 +16,14 @@ Warden is a controlled-environment security testing suite designed to automate v
   - Developed full ScanOrchestrator to initiate scans, track status, and monitor progress.
   - Developed conversion interface mapping raw ZAP alerts into Warden Finding models.
   - Integrated scan command execution into the Warden CLI.
+- **Phase 3: Automated Vulnerability Scanning (COMPLETE)**
+  - Implemented evidence-based SQL Injection scanner (Error-based, Time-based, and Boolean-based).
+  - Implemented Cross-Site Scripting (XSS) scanner checking for raw unescaped reflection.
+  - Implemented Authentication Weakness scanner checking for unprotected endpoints and bypass headers.
+- **Phase 4: Broken Access Control Testing (COMPLETE)**
+  - Introduced User A/User B test model with separate authenticated contexts.
+  - Implemented checks for cross-user read/write access and IDOR-style resource identifier manipulation.
+  - Verified successful access control enforcement without false positives.
 
 ---
 
@@ -160,6 +168,6 @@ This launches the Warden service and an OWASP ZAP stable container running in da
 ---
 
 ## Current Limitations
-- **Security Testing Modules:** Custom active attack injection scripts (SQLi, XSS, auth bypass) are scheduled for later phases.
-- **Reporting Exporters:** Saving raw alerts into custom formats (markdown reports, PDF reports) is a placeholder.
+- **Input Fuzzing:** Intelligent input fuzzing on parameter fields is scheduled for Phase 5.
+- **Reporting Exporters:** Saving raw alerts into custom formats (markdown reports, PDF reports) is scheduled for Phase 6.
 
