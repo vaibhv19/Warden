@@ -1,0 +1,26 @@
+services:
+  warden:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./reports:/app/reports
+    env_file:
+      - .env
+    depends_on:
+      - zap
+    networks:
+      - warden-net
+
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    ports:
+      - "8080:8080"
+    # Runs ZAP in daemon mode listening on all network interfaces with API key checking disabled for local development
+    command: zap.sh -daemon -host 0.0.0.0 -port 8080 -config api.disablekey=true
+    networks:
+      - warden-net
+
+networks:
+  warden-net:
+    driver: bridge
