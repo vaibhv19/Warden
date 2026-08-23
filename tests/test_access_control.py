@@ -250,7 +250,7 @@ def test_access_control_integration():
         target = TargetConfig(
             id="t-ac-integration",
             name="Access Control Integration Target",
-            base_url=f"http://localhost:{port}/",
+            base_url=f"http://127.0.0.1:{port}/",
             is_authorized=True,
             auth_context=TargetAuthContext(
                 auth_type="bearer", credentials={"Authorization": "Bearer user-a-token"}
@@ -263,7 +263,7 @@ def test_access_control_integration():
                     {
                         "name": "Integration Vulnerable Read",
                         "method": "GET",
-                        "url_template": f"http://localhost:{port}/api/documents/vulnerable/{{resource_id}}",
+                        "url_template": f"http://127.0.0.1:{port}/api/documents/vulnerable/{{resource_id}}",
                         "resource_id_owner": "doc-b",
                         "action": "read",
                         "owner_indicator": "Secret Document B",
@@ -271,7 +271,7 @@ def test_access_control_integration():
                     {
                         "name": "Integration Secure Read",
                         "method": "GET",
-                        "url_template": f"http://localhost:{port}/api/documents/secure/{{resource_id}}",
+                        "url_template": f"http://127.0.0.1:{port}/api/documents/secure/{{resource_id}}",
                         "resource_id_owner": "doc-b",
                         "action": "read",
                         "owner_indicator": "Secret Document B",
@@ -279,7 +279,7 @@ def test_access_control_integration():
                     {
                         "name": "Integration Vulnerable Write",
                         "method": "PUT",
-                        "url_template": f"http://localhost:{port}/api/documents/vulnerable/{{resource_id}}",
+                        "url_template": f"http://127.0.0.1:{port}/api/documents/vulnerable/{{resource_id}}",
                         "resource_id_owner": "doc-b",
                         "action": "write",
                         "attacker_payload": {"title": "Integration Hacked Title"},

@@ -22,6 +22,19 @@ DOCUMENTS = {
 
 class VulnerableHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
+        try:
+            self._handle_request()
+        except Exception as e:
+            try:
+                self.send_response(500)
+                self.send_header("Content-Type", "text/plain")
+                self.end_headers()
+                self.wfile.write(f"500 Internal Server Error: {str(e)}".encode("utf-8"))
+            except Exception:
+                pass
+
+    def _handle_request(self):
+        self.close_connection = True
         parsed_url = urllib.parse.urlparse(self.path)
         path = parsed_url.path
         query_params = urllib.parse.parse_qs(parsed_url.query)
@@ -212,6 +225,82 @@ class VulnerableHandler(http.server.BaseHTTPRequestHandler):
                 self.send_header("Content-Type", "application/json")
                 self.end_headers()
                 self.wfile.write(json.dumps(doc).encode("utf-8"))
+            return
+
+        # 5.3 Input Fuzzing Secure endpoint
+        elif path == "/api/fuzz/secure":
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length).decode("utf-8")
+            try:
+                payload = json.loads(body)
+            except Exception:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b"400 Bad Request: Invalid JSON")
+                return
+
+            username = payload.get("username")
+            if username is None:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b"400 Bad Request: Missing username")
+                return
+
+            if not isinstance(username, str):
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b"400 Bad Request: username must be string")
+                return
+
+            if len(username) > 1000:
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b"400 Bad Request: username too long")
+                return
+
+            age = payload.get("age")
+            if age is not None and not isinstance(age, int):
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b"400 Bad Request: age must be int")
+                return
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(
+                json.dumps({"status": "success", "username": username}).encode("utf-8")
+            )
+            return
+
+        # 5.4 Input Fuzzing Vulnerable endpoint
+        elif path == "/api/fuzz/vulnerable":
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length).decode("utf-8")
+
+            payload = json.loads(body)
+            username = payload.get("username")
+
+            if username is None:
+                raise ValueError("Username cannot be None!")
+
+            upper_username = username.upper()
+
+            if len(username) > 1000:
+                raise OverflowError("Buffer overflow simulated: payload too large!")
+
+            age = payload.get("age")
+            if age is not None:
+                _ = age + 10
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(
+                json.dumps({"status": "success", "username": upper_username}).encode(
+                    "utf-8"
+                )
+            )
             return
 
         # 6. Fallback 404

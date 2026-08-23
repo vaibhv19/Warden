@@ -7,6 +7,7 @@ from warden.models.target import TargetConfig
 from warden.reporting import normalize_zap_alert
 from warden.scanners.access_control import AccessControlScanner
 from warden.scanners.auth import AuthScanner
+from warden.scanners.fuzzing import FuzzingScanner
 from warden.scanners.sqli import SqlInjectionScanner
 from warden.scanners.xss import XssScanner
 from warden.scanners.zap_client import ZapClient
@@ -179,6 +180,17 @@ class ScanOrchestrator:
             self._log(
                 f"Warning: Broken Access Control Scanner encountered an issue: {e}"
             )
+
+        try:
+            fuzz_scanner = FuzzingScanner(self.target, self.zap)
+            self._log("Running Input Fuzzing Scanner...")
+            fuzz_findings = fuzz_scanner.run()
+            self._log(
+                f"Input Fuzzing Scanner discovered {len(fuzz_findings)} findings."
+            )
+            normalized_findings.extend(fuzz_findings)
+        except Exception as e:
+            self._log(f"Warning: Input Fuzzing Scanner encountered an issue: {e}")
 
         # Deduplicate findings by ID
         unique_findings = {}
