@@ -108,6 +108,7 @@ def scan(
         click.echo(f"[*] ZAP API endpoint: {settings.zap_base_url}")
 
         from warden.orchestration import ScanOrchestrator
+        from warden.reporting.engine import ReportEngine
 
         orchestrator = ScanOrchestrator(
             settings=settings, target=target, progress_callback=log_progress
@@ -115,18 +116,31 @@ def scan(
 
         findings = orchestrator.run_baseline_scan()
 
+        # Run reporting engine
+        report_engine = ReportEngine(target, findings)
+        deduped_findings = report_engine.deduplicate()
+
         click.echo("--------------------------------------------------")
         click.echo("[+] Scan completed successfully.")
-        click.echo(f"[+] Findings discovered: {len(findings)}")
+        click.echo(f"[+] Findings discovered: {len(deduped_findings)}")
+        click.echo(f"[+] Total raw findings: {len(findings)}")
 
-        settings.output_dir.mkdir(parents=True, exist_ok=True)
-        findings_file = settings.output_dir / f"findings-{target_id}.json"
+        # Save JSON and MD reports
+        saved_paths = report_engine.save_reports(settings.output_dir, target_id)
 
-        serialized_findings = [f.model_dump() for f in findings]
-        with open(findings_file, "w", encoding="utf-8") as f:
-            json.dump(serialized_findings, f, indent=2)
+        click.echo(f"[+] Structured JSON report saved to: {saved_paths['json']}")
+        click.echo(
+            f"[+] Human-readable Markdown report saved to: {saved_paths['markdown']}"
+        )
 
-        click.echo(f"[+] Normalized findings saved to: {findings_file}")
+        # Display severity summary breakdown
+        summary = report_engine.get_summary_counts(deduped_findings)
+        click.echo("[+] Severity breakdown:")
+        click.echo(f"    Critical: {summary['critical']}")
+        click.echo(f"    High:     {summary['high']}")
+        click.echo(f"    Medium:   {summary['medium']}")
+        click.echo(f"    Low:      {summary['low']}")
+        click.echo(f"    Info:     {summary['info']}")
 
     except Exception as e:
         click.echo(f"[-] Scan execution failed: {e}", err=True)

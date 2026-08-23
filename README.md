@@ -24,6 +24,14 @@ Warden is a controlled-environment security testing suite designed to automate v
   - Introduced User A/User B test model with separate authenticated contexts.
   - Implemented checks for cross-user read/write access and IDOR-style resource identifier manipulation.
   - Verified successful access control enforcement without false positives.
+- **Phase 5: Intelligent Input Fuzzing (COMPLETE)**
+  - Implemented parameter-based fuzzing engine for strings and integers.
+  - Supported malformed JSON, missing fields, type mismatches, and oversized inputs.
+  - Identified unhandled server crashes (HTTP 500) and timeouts as anomalies.
+- **Phase 6: Security Findings & Reporting Engine (COMPLETE)**
+  - Implemented a unified `ReportEngine` with finding aggregation, severity categorization, and metadata mapping.
+  - Developed signature-based deduplication (grouping by name, URL, and parameter).
+  - Supported exporting structured JSON and human-readable Markdown security reports.
 
 ---
 
@@ -168,6 +176,5 @@ This launches the Warden service and an OWASP ZAP stable container running in da
 ---
 
 ## Current Limitations
-- **Input Fuzzing:** Intelligent input fuzzing on parameter fields is scheduled for Phase 5.
-- **Reporting Exporters:** Saving raw alerts into custom formats (markdown reports, PDF reports) is scheduled for Phase 6.
+- **Full E2E Integration:** Comprehensive multi-scanner end-to-end integration and Docker verification are scheduled for Phase 7.
 
