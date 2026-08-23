@@ -104,6 +104,9 @@ def scan(
         def log_progress(msg: str) -> None:
             click.echo(f"[*] {msg}")
 
+        click.echo(f"[*] Scanned target endpoint: {target.base_url}")
+        click.echo(f"[*] ZAP API endpoint: {settings.zap_base_url}")
+
         from warden.orchestration import ScanOrchestrator
 
         orchestrator = ScanOrchestrator(

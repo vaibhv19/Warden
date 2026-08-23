@@ -15,9 +15,15 @@ class ZapClientError(Exception):
 class ZapClient:
     """A lightweight REST client for interacting with the OWASP ZAP API."""
 
-    def __init__(self, base_url: str, api_key: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        api_key: Optional[str] = None,
+        timeout: int = 10,
+    ) -> None:
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
+        self.timeout = timeout
 
     def _request(
         self, path: str, params: Optional[Dict[str, Any]] = None, is_post: bool = False
@@ -42,7 +48,7 @@ class ZapClient:
             req.add_header("X-ZAP-API-Key", self.api_key)
 
         try:
-            with urllib.request.urlopen(req, timeout=10) as response:
+            with urllib.request.urlopen(req, timeout=self.timeout) as response:
                 content = response.read().decode("utf-8")
                 return json.loads(content)
         except urllib.error.HTTPError as e:

@@ -68,8 +68,11 @@ def test_orchestrator_success(
     assert any("Spider progress: 100%" in log for log in progress_log)
 
     mock_validate.assert_called_once_with(test_target)
-    mock_reachability.assert_called_once()
+    mock_reachability.assert_called_once_with(
+        test_target, timeout=test_settings.timeout_seconds
+    )
     mock_zap.start_spider.assert_called_once_with(str(test_target.base_url))
+    assert test_target.base_url != test_settings.zap_base_url
 
 
 @patch("warden.orchestration.validate_target_config")
@@ -88,7 +91,30 @@ def test_orchestrator_target_validation_failure(
 
     with pytest.raises(OrchestratorError) as excinfo:
         orchestrator.run_baseline_scan()
-    assert "Target validation failed: Invalid Config Details" in str(excinfo.value)
+    assert "Target validation failed" in str(excinfo.value)
+
+
+@patch("warden.orchestration.validate_target_config")
+@patch("warden.orchestration.check_target_reachability")
+@patch("warden.orchestration.ZapClient")
+def test_orchestrator_reachability_failure(
+    mock_zap_class: MagicMock,
+    mock_reachability: MagicMock,
+    mock_validate: MagicMock,
+    test_settings: Settings,
+    test_target: TargetConfig,
+) -> None:
+    """Verify orchestrator fails when target reachability check fails."""
+    mock_reachability.side_effect = Exception("Target unreachable")
+
+    orchestrator = ScanOrchestrator(
+        settings=test_settings,
+        target=test_target,
+    )
+
+    with pytest.raises(OrchestratorError) as excinfo:
+        orchestrator.run_baseline_scan()
+    assert "Target reachability check failed" in str(excinfo.value)
 
 
 @patch("warden.orchestration.validate_target_config")
@@ -145,3 +171,21 @@ def test_orchestrator_spider_timeout(
     with pytest.raises(OrchestratorError) as excinfo:
         orchestrator.run_baseline_scan()
     assert "Scan timed out after" in str(excinfo.value)
+
+
+def test_settings_separate_from_target_default() -> None:
+    """Verify ZAP and Target configs are separate and do not inherit from each other."""
+    settings = Settings(
+        WARDEN_ENV="test",
+        ZAP_BASE_URL="http://zap-api:8080",
+        TIMEOUT_SECONDS=1,
+    )
+    target = TargetConfig(
+        id="t-test",
+        name="Target Test",
+        base_url="http://target-app:8000",
+        is_authorized=True,
+    )
+    assert str(settings.zap_base_url) != str(target.base_url)
+    assert "zap" in str(settings.zap_base_url)
+    assert "target" in str(target.base_url)

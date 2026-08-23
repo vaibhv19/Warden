@@ -30,6 +30,7 @@ class ScanOrchestrator:
         self.zap = ZapClient(
             base_url=str(self.settings.zap_base_url),
             api_key=self.settings.zap_api_key,
+            timeout=self.settings.timeout_seconds,
         )
 
     def _log(self, message: str) -> None:
